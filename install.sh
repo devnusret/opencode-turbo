@@ -2,7 +2,8 @@
 set -euo pipefail
 
 REPO="${OPENCODE_TURBO_REPO:-devnusret/opencode-turbo}"
-ASSET="${OPENCODE_TURBO_ASSET:-opencode-turbo-aarch64-android}"
+ASSET="${OPENCODE_TURBO_ASSET:-opencode-turbo-aarch64-linux-musl}"
+SUMS="${OPENCODE_TURBO_SUMS:-}"
 SOURCE_BUILD=0
 LOCAL_BINARY=""
 
@@ -17,7 +18,8 @@ Usage:
 
 Environment:
   OPENCODE_TURBO_REPO          GitHub repository (default: devnusret/opencode-turbo)
-  OPENCODE_TURBO_ASSET         release asset name (default: opencode-turbo-aarch64-android)
+  OPENCODE_TURBO_ASSET         release asset name (default: opencode-turbo-aarch64-linux-musl)
+  OPENCODE_TURBO_SUMS          checksum asset name (default: auto by asset suffix)
 EOF
 }
 
@@ -70,16 +72,22 @@ elif [ "$SOURCE_BUILD" = "1" ]; then
   cp "$SCRIPT_DIR/target/release/opencode-turbo" "$TARGET.tmp.$$"
 else
   TMP="$(mktemp -d)"
+  if [ -z "$SUMS" ]; then
+    case "$ASSET" in
+      *-musl) SUMS="SHA256SUMS.musl" ;;
+      *) SUMS="SHA256SUMS" ;;
+    esac
+  fi
   echo "downloading $ASSET from $REPO"
   curl -fsSL --retry 3 --proto '=https' --proto-redir '=https' \
     -o "$TMP/$ASSET" \
     "https://github.com/$REPO/releases/latest/download/$ASSET"
   curl -fsSL --retry 3 --proto '=https' --proto-redir '=https' \
-    -o "$TMP/SHA256SUMS" \
-    "https://github.com/$REPO/releases/latest/download/SHA256SUMS"
+    -o "$TMP/$SUMS" \
+    "https://github.com/$REPO/releases/latest/download/$SUMS"
   (
     cd "$TMP"
-    grep "  $ASSET\$" SHA256SUMS > selected.sha256
+    grep "  $ASSET\$" "$SUMS" > selected.sha256
     sha256sum -c selected.sha256
   )
   cp "$TMP/$ASSET" "$TARGET.tmp.$$"

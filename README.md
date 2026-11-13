@@ -15,19 +15,23 @@ patched or modified.
 ## Results
 
 Measured on an aarch64 Android 15 device in Termux with warm caches,
-`opencode-termux` 1.19.3, medians of 2-3 runs:
+`opencode-termux` 1.19.3, static musl launcher, medians of 2-3 runs:
 
 | What | Before | opencode-turbo | Improvement |
 | --- | ---: | ---: | ---: |
-| `opencode --version` | 2964 ms | 12 ms | ~247x |
-| `opencode --help` | 3024 ms | 13 ms | ~233x |
-| `opencode debug startup` (wall) | 2972 ms | 1284 ms | 2.3x |
-| TUI first paint | 3660 ms | 1930 ms | 1.9x |
-| TUI home screen | 9205 ms | 3355 ms | 2.7x |
+| `opencode --version` | 2964 ms | 2.4 ms | ~1200x |
+| `opencode --help` | 3024 ms | 2.0 ms | ~1500x |
+| `opencode debug startup` (wall) | 2972 ms | 1127 ms | 2.6x |
+| TUI first paint | 3660 ms | 1750 ms | 2.1x |
+| TUI home screen | 9205 ms | 3090 ms | 3.0x |
+
+The `opencode` numbers are from the native launcher. Invoking
+`/usr/bin/opencode` through the compatibility bash shim adds about 10 ms, still
+well over 200x faster than before.
 
 For reference, `opencode-turbo --turbo-no-fast-boot` shows the TUI home screen
-in about 7.3 s, so opencode's fast boot alone removes roughly 4 s of perceived
-startup and the native launcher removes another ~1.8 s.
+in about 6.9 s, so opencode's fast boot alone removes roughly 3.8 s of perceived
+startup and the native launcher removes another ~1.9 s.
 
 The TUI still needs about 2 s to initialize the Bun runtime and the terminal
 renderer. Removing that would require forking opencode itself; this project
@@ -57,7 +61,7 @@ cd opencode-turbo
 
 The installer:
 
-1. downloads a verified prebuilt launcher (or builds it locally with `--from-source`),
+1. downloads the verified static aarch64 musl launcher (or builds it locally with `--from-source`; a bionic Android asset is also attached),
 2. installs `~/.local/bin/opencode-turbo` and an `opencode` symlink,
 3. adds a small, idempotent PATH block to `~/.bashrc`,
 4. patches the `opencode-termux` shell wrapper with a shim that calls the native
