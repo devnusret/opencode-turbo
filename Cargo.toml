@@ -1,0 +1,16 @@
+[package]
+name = "opencode-turbo"
+version = "0.1.0"
+edition = "2021"
+description = "Fast native launcher for opencode-termux on Android/Termux"
+license = "MIT"
+repository = "https://github.com/devnusret/opencode-turbo"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[dependencies]
