@@ -75,13 +75,14 @@ opencode --version                 # should be instant
 opencode-turbo --turbo-doctor      # paths, versions and a timing check
 ```
 
-If the package wrapper is ever replaced by an npm update, re-apply the shim:
+If the package wrapper is ever replaced by an npm update, the launcher
+re-applies the shim automatically on the next launch. You can also force it:
 
 ```bash
 opencode-turbo --turbo-repair
 ```
 
-The daily background update check does this automatically after it updates
+The daily background update check also re-applies it after updating
 opencode-termux.
 
 ## How it works
@@ -99,6 +100,8 @@ opencode-termux.
   in a detached process. Failures are logged and ignored.
 - **Safe fallback.** If the launcher is missing or broken, the shim continues
   into the original `opencode-termux` wrapper.
+- **Self-healing.** On each launch the launcher checks the 2 KB wrapper for its
+  marker and re-applies the shim if an npm update replaced it.
 
 ## Launcher options
 
@@ -161,7 +164,8 @@ python3 scripts/bench.py --runs 2 --timeout 15 -- opencode-turbo --turbo-no-fast
   cost. It removes wrapper overhead and the loading-screen wait.
 - Fast boot shows the UI before all background data has arrived. This is the
   same trade-off as opencode's own `OPENCODE_FAST_BOOT`.
-- An npm update can overwrite the shim; `--turbo-repair` fixes it. The PATH
+- An npm update can overwrite the shim; the next launch through the PATH
+  symlink re-applies it automatically, or run `--turbo-repair`. The PATH
   symlink keeps `opencode` fast in interactive shells even without the shim.
 - Not affiliated with opencode, SST, or opencode-termux.
 
