@@ -113,6 +113,7 @@ fn run() -> Result<(), String> {
         }
         Action::Warm => {
             ensure_runtime(&paths)?;
+            ensure_shim(&paths);
             warm(&paths)?;
             return Ok(());
         }
@@ -132,6 +133,7 @@ fn run() -> Result<(), String> {
     }
 
     ensure_runtime(&paths)?;
+    ensure_shim(&paths);
 
     if args.len() == 1 && (args[0] == OsStr::new("--version") || args[0] == OsStr::new("-v")) {
         print_runtime_version(&paths);
@@ -522,10 +524,24 @@ fn warm(paths: &Paths) -> Result<(), String> {
     Ok(())
 }
 
+fn ensure_shim(paths: &Paths) {
+    if let Ok(content) = fs::read_to_string(&paths.package_bin) {
+        if !content.contains(SHIM_MARKER) && content.contains("install.js") {
+            let _ = apply_shim(paths);
+        }
+    }
+}
+
 fn apply_shim(paths: &Paths) -> io::Result<bool> {
     let content = fs::read_to_string(&paths.package_bin)?;
     if content.contains(SHIM_MARKER) {
         return Ok(false);
+    }
+    if !content.contains("install.js") {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "package bin/opencode does not look like the opencode-termux wrapper",
+        ));
     }
 
     if let Some(parent) = paths.backup.parent() {
